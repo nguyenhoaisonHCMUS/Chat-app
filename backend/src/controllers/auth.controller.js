@@ -127,8 +127,19 @@ class AuthController {
     }
 
     async logout (req, res) {
-        const refresToken = req.cookies.refresToken;
-        refreshTokens.filter((token) => token!==refresToken);
+        try {
+            const refresToken = req.cookies.refresToken;
+
+            //delete refreshToken
+            refreshTokens.filter((token) => token!==refresToken);
+            res.cookie("refresToken", "", { maxAge: 0 });
+            
+
+        } catch (error) {
+            console.error('Error refreshing token:', error);
+            return res.status(500).json({ message: 'Internal server error' });
+        }
+
     }
 
 }
