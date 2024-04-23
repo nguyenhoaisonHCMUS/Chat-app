@@ -1,3 +1,4 @@
+const User = require('../models/user.model');
 
 class UserController {
     async getUsersForSidebar (req, res) {
