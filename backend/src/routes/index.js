@@ -1,4 +1,5 @@
-const authController = require("../controllers/auth.controller")
+const authController = require("../controllers/auth.controller");
+const messageController = require("../controllers/message.controller");
 const authenToken = require('../midlewares/index');
 
 const route = (app) =>{
@@ -10,7 +11,7 @@ const route = (app) =>{
 
 
     //MESSAGE
-    
+    app.post('/api/v1/send-message/:id', authenToken, messageController.sendMessage)
 }
 
 module.exports = route;

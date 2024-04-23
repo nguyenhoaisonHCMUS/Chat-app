@@ -1,17 +1,24 @@
 const { createServer } = require('node:http');
 const { Server } = require('socket.io');
 const express = require('express');
+const cookieParser = require('cookie-parser');
+//const cors = require('cors')
 
 const app =express();
+//app.use(cors());
+app.use(express.json());  // for parsing application/json
+app.use(express.urlencoded({ extended: true })); // for parsing application/x-www-form-urlencoded
+app.use(cookieParser());
+
 const server = createServer(app);
 const io = new Server(server, {
     cors: {
-        origin: ["http://localhost:8000"],
+        origin: ["http://localhost:5173"],
 		methods: ["GET", "POST"],
     }
 })
 
-export const getReceiverSocketId = (receiverId) => {
+const getReceiverSocketId = (receiverId) => {
 	return userSocketMap[receiverId];
 };
 const userSocketMap = {}; // {userId: socketId}
@@ -33,4 +40,4 @@ io.on("connection", (socket) => {
 	});
 });
 
-export { app, io, server };
+module.exports = { app, io, server };
