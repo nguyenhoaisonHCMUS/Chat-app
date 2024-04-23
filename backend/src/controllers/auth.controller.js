@@ -1,7 +1,8 @@
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 
 const { User } = require("../models/user.model");
-const { generateAccessToken } = require("../utils/genToken");
+const { generateAccessToken, generateRefreshAccessToken } = require("../utils/genToken");
 
 let refreshTokens = [];
 
@@ -10,7 +11,6 @@ class AuthController {
     async signup (req, res) {
         try {
             const { fullname, username, password, gender } = req.body;
-            console.log(fullname, username, password, gender)
             if(!fullname || !username || !password || !gender){
                 return res.status(400).json({error: "incomplete information!!"}); 
             }
@@ -36,9 +36,9 @@ class AuthController {
             });
             if(user){
                 //token
-                const accessToken = generateAccessToken(user._id);
-                // const refreshToken = generateRefreshAccessToken({userId: user._id}, res);
-                // refreshTokens.push(refreshToken);
+                const accessToken = generateAccessToken({userId: user._id, fullname: user.fullname, username: user.username, imgUrl: user.profilePic});
+                const refreshToken = generateRefreshAccessToken({userId: user._id, fullname: user.fullname, username: user.username, imgUrl: user.profilePic}, res);
+                refreshTokens.push(refreshToken);
 
                 await user.save();
 
@@ -46,6 +46,7 @@ class AuthController {
                     {
                         user: {userId: user._id, fullname: user.fullname, username: user.username, imgUrl: user.profilePic}, 
                         accessToken,
+                        // refreshToken,
                     }
                 );  
             }else{
@@ -62,7 +63,6 @@ class AuthController {
     async signin (req, res) {
         try {
             const {username, password} = req.body;
-            // console.log(username, password);
             const user = await User.findOne({ username });
             const isPasswordCorrect = await bcrypt.compare(password, user?.password || "");
 
@@ -70,14 +70,14 @@ class AuthController {
                 return res.status(400).json({ error: "Invalid username or password" });
             }
 
-            const accessToken = generateAccessToken(user._id);
-            const refreshToken = generateRefreshAccessToken({userId: user._id}, res);
+            const accessToken = generateAccessToken({userId: user._id, fullname: user.fullname, username: user.username, imgUrl: user.profilePic});
+            const refreshToken = generateRefreshAccessToken({userId: user._id, fullname: user.fullname, username: user.username, imgUrl: user.profilePic}, res);
             refreshTokens.push(refreshToken);
 
             return res.status(200).json(
                 {
-                    user: {userId: user._id, fullname: user.fullName, username: user.username, imgUrl: user.profilePic}, 
-                    accessToken: accessToken,
+                    user: {userId: user._id, fullname: user.fullname, username: user.username, imgUrl: user.profilePic}, 
+                    accessToken: accessToken,                  
                 }
             );  
 
@@ -85,6 +85,50 @@ class AuthController {
             console.log('error: ',error);
 		    return res.status(500).json({ error: "Internal Server Error" });
         }
+    }
+
+    async requestRefreshToken(req, res) {
+        try {
+            const refreshtoken = req.cookies.refreshToken;
+            if (!refreshtoken) {
+                return res.status(401).json({ message: "You're not authenticated!" });
+            }
+
+            if (!refreshTokens.includes(refreshtoken)) {
+                return res.status(403).json('refreshToken is not valid');
+            }
+
+            jwt.verify(refreshtoken, process.env.REFRESHTOKEN_KEY, (err, data) => {
+                if (err) {
+                    return res.status(403).json({ err });
+                }
+
+                // Xác thực thành công, cập nhật accessToken
+                const newAccessToken = jwt.sign({userId: data._id} , process.env.REFRESHTOKEN_KEY, { expiresIn: '30s' });
+                const newRefreshToken = jwt.sign({userId: data._id} , process.env.REFRESHTOKEN_KEY, { expiresIn: '30d' });
+                res.cookie('refreshToken', newRefreshToken, {
+                    httpOnly: true,
+                    secure: false,
+                    path: '/',
+                    sameSite: 'strict',
+                });
+
+                // Xóa mã thông báo cũ
+                refreshTokens = refreshTokens.filter((token) => token !== newRefreshToken);
+                //add new reftoken 
+                refreshTokens.push(newRefreshToken);
+
+                return res.status(200).json({ accessToken: newAccessToken });
+            });
+        } catch (error) {
+            console.error('Error refreshing token:', error);
+            return res.status(500).json({ message: 'Internal server error' });
+        }
+    }
+
+    async logout (req, res) {
+        const refresToken = req.cookies.refresToken;
+        refreshTokens.filter((token) => token!==refresToken);
     }
 
 }
