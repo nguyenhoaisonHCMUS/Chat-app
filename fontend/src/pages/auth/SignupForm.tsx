@@ -9,6 +9,7 @@ import {
     FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { signupValid } from '@/lib/validations';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader } from 'lucide-react';
@@ -25,8 +26,9 @@ function SignupForm() {
     const form = useForm<z.infer<typeof signupValid>>({
         resolver: zodResolver(signupValid),
         defaultValues: {
-            name: '',
-            email: '',
+            fullname: '',
+            username: '',
+            gender: 'male',
             password: '',
             validpass: '',
         },
@@ -37,9 +39,9 @@ function SignupForm() {
     };
 
     return (
-        <div className=" py-5 px-10 ">
+        <div className=" form_bg h-full max-h-[600px] min-h-[400px] overflow-auto custom-scrollbar">
             <Form {...form}>
-                <div className="sm:w-420 flex-center flex-col">
+                <div className="sm:w-420 flex-center flex-col text-white">
                     <div className=" flex-center gap-5">
                         <img
                             src={imgs.logo}
@@ -54,11 +56,11 @@ function SignupForm() {
                     </p>
                     <form
                         onSubmit={form.handleSubmit(onSubmit)}
-                        className="flex flex-col gap-5 w-full mt-4"
+                        className="flex flex-col gap-5 w-full mt-4 text-white"
                     >
                         <FormField
                             control={form.control}
-                            name="name"
+                            name="fullname"
                             render={({ field }) => (
                                 <FormItem>
                                     <FormLabel className="shad-form_label">
@@ -77,7 +79,7 @@ function SignupForm() {
                         />
                         <FormField
                             control={form.control}
-                            name="email"
+                            name="username"
                             render={({ field }) => (
                                 <FormItem>
                                     <FormLabel className="shad-form_label">
@@ -87,9 +89,44 @@ function SignupForm() {
                                         <Input
                                             type="text"
                                             className="shad-input"
-                                            placeholder="Enter your email..."
+                                            placeholder="Enter your username..."
                                             {...field}
                                         />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+
+                        <FormField
+                            control={form.control}
+                            name="gender"
+                            render={({ field }) => (
+                                <FormItem className="space-y-3">
+                                    <FormLabel>Gender</FormLabel>
+                                    <FormControl>
+                                        <RadioGroup
+                                            onValueChange={field.onChange}
+                                            defaultValue={field.value}
+                                            className="flex space-y-1"
+                                        >
+                                            <FormItem className="flex items-center space-x-3 space-y-0">
+                                                <FormControl>
+                                                    <RadioGroupItem value="male" />
+                                                </FormControl>
+                                                <FormLabel className="font-normal">
+                                                    Male
+                                                </FormLabel>
+                                            </FormItem>
+                                            <FormItem className="flex items-center space-x-3 space-y-0">
+                                                <FormControl>
+                                                    <RadioGroupItem value="female" />
+                                                </FormControl>
+                                                <FormLabel className="font-normal">
+                                                    Female
+                                                </FormLabel>
+                                            </FormItem>
+                                        </RadioGroup>
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
@@ -136,7 +173,6 @@ function SignupForm() {
                                 </FormItem>
                             )}
                         />
-
                         <Button type="submit" className="shad-button_primary">
                             {isLoading ? (
                                 <div className="flex-center gap-2">
@@ -146,10 +182,9 @@ function SignupForm() {
                                 'Register'
                             )}
                         </Button>
-
                         <p className=" text-center mt-2">
                             You have a account?
-                            <Link to="/sign-in" className="text-white ml-1">
+                            <Link to="/sign-in" className="text-blue-500 ml-1">
                                 Sign in
                             </Link>
                         </p>
