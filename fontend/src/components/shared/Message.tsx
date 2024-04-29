@@ -1,9 +1,19 @@
-import { useSelector } from "react-redux";
+import useConversation from '@/hooks/useConversation';
+import { extractTime } from '@/lib/utils';
+import { RootState } from '@/redux/store';
+import { useSelector } from 'react-redux';
 
-function Message() {
-    const user = useSelector(())
+function Message({ message }) {
+    const user = useSelector((state: RootState) => state.auth.currentUser.user);
+    const { selectedConversation } = useConversation();
+    const fromMe = message.senderId === user.userId;
+    const formattedTime = extractTime(message.createdAt);
 
-    const chatClassName = fromMe ? "chat-end" : "chat-start";
+    const chatClassName = fromMe ? 'chat-end' : 'chat-start';
+    const profilePic = fromMe ? user.imgUrl : selectedConversation?.profilePic;
+    const bubbleBgColor = fromMe ? 'bg-blue-500' : '';
+    const shakeClass = message.shouldShake ? 'shake' : '';
+
     return (
         <div className={`chat ${chatClassName}`}>
             <div className="chat-image avatar">

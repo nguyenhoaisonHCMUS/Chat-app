@@ -26,7 +26,17 @@ export const sendMess = async (message: string, receivedId: string) => {
     return res.data;
     
   } catch (error) {
-    console.log('error:',error);
+    console.log('error of sendMessage f::',error);
+  }
+}
+
+export const getMess = async (receivedId: string) => {
+  try {
+    const res = await instance.get(`/get-messages/${receivedId}`)
+    return res.data;
+    
+  } catch (error) {
+    console.log('error of getMessage f::',error);
   }
 }
 
@@ -36,7 +46,7 @@ export const getConversations = async () => {
     return res.data;
     
   } catch (error) {
-    console.log('error:',error);
+    console.log('error of get Conversation f:',error);
   }
 }
 
